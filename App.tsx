@@ -173,13 +173,16 @@ const App: React.FC = () => {
     showNotification("Sovereign Signet Keys generated.", "success");
   };
 
+  const isAdmin = (appState.user.tier === Tier.WARDEN || appState.user.tier === Tier.KEYSTONE) || 
+                  (appState.user.name.toLowerCase() === 'demo' && appState.user.email.toLowerCase() === 'demo@demo.com');
+
   if (!isLoggedIn) {
     return <Auth onLogin={handleLogin} />;
   }
 
   return (
     <Router>
-      <Layout isAdmin={appState.user.tier === Tier.WARDEN || appState.user.tier === Tier.KEYSTONE} syncMode={appState.user.privacy.storageLocation}>
+      <Layout isAdmin={isAdmin} syncMode={appState.user.privacy.storageLocation}>
         {notification && (
           <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[1000] animate-in slide-in-from-top-10 duration-300">
             <div className={`px-8 py-4 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.4)] border-2 flex items-center gap-4 backdrop-blur-xl ${

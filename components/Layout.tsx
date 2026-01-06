@@ -17,7 +17,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, isAdmin, syncMode }) =
     { name: 'The Archive', path: '/library', icon: '📚' },
     { name: 'AI Weaver', path: '/designer', icon: '✨' },
     { name: 'Colony Hub', path: '/colonies', icon: '🏰' },
-    ...(isAdmin ? [{ name: 'Sanctum', path: '/warden', icon: '🏛️' }] : []),
+    ...(isAdmin ? [{ name: 'Guildmaster Council', path: '/warden', icon: '🏛️' }] : []),
     { name: 'Seeker Profile', path: '/profile', icon: '👤' },
   ];
 

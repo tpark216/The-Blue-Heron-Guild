@@ -24,8 +24,8 @@ export const WardenSanctum: React.FC<WardenSanctumProps> = ({
     <div className="space-y-12 pb-20">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-8">
         <div>
-          <h2 className="text-5xl font-bold guild-font tracking-tight text-slate-100">The Warden's Sanctum</h2>
-          <p className="text-slate-400 mt-2 text-lg italic font-serif">Governance, verification, and stewardship of the High Council.</p>
+          <h2 className="text-5xl font-bold guild-font tracking-tight text-slate-100">Guildmaster Council</h2>
+          <p className="text-slate-400 mt-2 text-lg italic font-serif">Sovereign oversight, verification, and stewardship of the High Council.</p>
         </div>
       </header>
 
@@ -50,6 +50,43 @@ export const WardenSanctum: React.FC<WardenSanctumProps> = ({
              <button className="bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all">Allocate Grants</button>
           </div>
         </div>
+      </section>
+
+      {/* Council Settings Section */}
+      <section className="bg-slate-900/50 border border-slate-800 p-8 rounded-[2.5rem] shadow-xl">
+         <h3 className="text-xl font-bold guild-font mb-6 flex items-center gap-3">
+           <span className="text-2xl">⚙️</span> Council Settings
+         </h3>
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="bg-slate-950 p-6 rounded-2xl border border-slate-800">
+               <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-4">Membership Tiers</p>
+               <div className="space-y-3">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-400 font-serif italic">Seeker to Wayfarer</span>
+                    <span className="text-amber-500">5 Badges</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-400 font-serif italic">Wayfarer to Journeyer</span>
+                    <span className="text-amber-500">10 Badges</span>
+                  </div>
+                  <button className="w-full mt-4 py-2 border border-slate-700 rounded-lg text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-white hover:border-amber-500/50 transition-all">Adjust Thresholds</button>
+               </div>
+            </div>
+            <div className="bg-slate-950 p-6 rounded-2xl border border-slate-800">
+               <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-4">Colony Distribution</p>
+               <div className="space-y-3">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-400 font-serif italic">Event Fund Allocation</span>
+                    <span className="text-emerald-500">10%</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-400 font-serif italic">Scholarship Target</span>
+                    <span className="text-emerald-500">15%</span>
+                  </div>
+                  <button className="w-full mt-4 py-2 border border-slate-700 rounded-lg text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-white hover:border-emerald-500/50 transition-all">Manage Percentages</button>
+               </div>
+            </div>
+         </div>
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
