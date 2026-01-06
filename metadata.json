@@ -1,0 +1,7 @@
+{
+  "name": "The Blue Heron Guild",
+  "description": "A self-directed badge and achievement tracking platform for community-supported adult mastery.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
