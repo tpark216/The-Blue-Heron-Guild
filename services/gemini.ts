@@ -1,8 +1,7 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Badge, Domain, Difficulty } from "../types";
+import { Badge, Domain, Difficulty, BadgeRequirement } from "../types";
 
-// Always initialize with process.env.API_KEY directly as a named parameter
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const generateBadgeContent = async (topic: string, goal: string): Promise<Partial<Badge>> => {
@@ -14,13 +13,9 @@ export const generateBadgeContent = async (topic: string, goal: string): Promise
     Structure the response with:
     1. A dramatic, guild-inspired title.
     2. A brief, evocative description (max 50 words).
-    3. Exactly 8-10 specific, progressive requirements that include:
-       - Safety and preparation protocols.
-       - Core theoretical knowledge/definitions.
-       - A significant practical field project or experiment.
-       - A community-focused application or mentorship task.
+    3. Exactly 8-10 specific, progressive requirements.
     
-    Assign a domain and a complexity rating from 1 to 5 stars (1 = shortest time/least complex, 5 = longest time/most complex).`,
+    Assign a domain and a complexity rating from 1 to 5 stars.`,
     config: {
       responseMimeType: "application/json",
       responseSchema: {
@@ -29,10 +24,7 @@ export const generateBadgeContent = async (topic: string, goal: string): Promise
           title: { type: Type.STRING },
           description: { type: Type.STRING },
           domain: { type: Type.STRING },
-          difficulty: { 
-            type: Type.INTEGER,
-            description: "Complexity rating from 1 to 5 stars" 
-          },
+          difficulty: { type: Type.INTEGER },
           requirements: {
             type: Type.ARRAY,
             items: { type: Type.STRING }
@@ -53,9 +45,38 @@ export const generateBadgeContent = async (topic: string, goal: string): Promise
     requirements: (data.requirements || []).map((req: string, idx: number) => ({
       id: `ai-req-${idx}`,
       description: req,
-      isCompleted: false
+      isCompleted: false,
+      requireAttachment: true,
+      requireNote: true
     }))
   };
+};
+
+export const suggestSingleTask = async (title: string, description: string, existingTasks: string[]): Promise<string> => {
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: `The badge is titled "${title}" and described as "${description}". 
+    Existing tasks: [${existingTasks.join(' | ')}].
+    Suggest ONE new, rigorous, and specific requirement for this badge. Return only the task text.`,
+  });
+  return response.text?.trim() || "Complete a significant project in this field.";
+};
+
+export const analyzeBadgeComplexity = async (title: string, description: string, requirements: BadgeRequirement[]): Promise<number> => {
+  const tasksText = requirements.map(r => r.description).join('\n');
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: `Evaluate the complexity of this badge curriculum:
+    Title: ${title}
+    Description: ${description}
+    Tasks:
+    ${tasksText}
+    
+    Assign a difficulty rating from 1 (Easy/Fast) to 5 (Extremely rigorous/Long-term).
+    Return only the number.`,
+  });
+  const rating = parseInt(response.text?.trim() || "3");
+  return isNaN(rating) ? 3 : Math.min(5, Math.max(1, rating));
 };
 
 export const getAIRecommendations = async (userBadges: Badge[], interests: string[]): Promise<string> => {
@@ -63,13 +84,7 @@ export const getAIRecommendations = async (userBadges: Badge[], interests: strin
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: `The user has mastered: [${currentBadges}]. They are interested in: [${interests.join(', ')}].
-    Act as the Guild Oracle. Provide a CONCISE revelation.
-    Structure:
-    1. One short mystical greeting (max 15 words).
-    2. Exactly three recommended mastery paths (Title: 1-sentence description).
-    3. One closing sentence (max 15 words).
-    TOTAL LIMIT: 100 words. Be sharp, evocative, and brief.`,
+    Act as the Guild Oracle. Provide a CONCISE revelation with 3 paths.`,
   });
-
   return response.text || "The Oracle remains silent for now.";
 };

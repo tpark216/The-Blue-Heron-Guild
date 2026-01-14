@@ -6,9 +6,10 @@ interface LayoutProps {
   children: React.ReactNode;
   isAdmin: boolean;
   syncMode?: 'local' | 'personal_cloud' | 'guild_sync';
+  onLogout: () => void;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, isAdmin, syncMode }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, isAdmin, syncMode, onLogout }) => {
   const location = useLocation();
 
   const navItems = [
@@ -17,7 +18,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, isAdmin, syncMode }) =
     { name: 'The Archive', path: '/library', icon: '📚' },
     { name: 'AI Weaver', path: '/designer', icon: '✨' },
     { name: 'Colony Hub', path: '/colonies', icon: '🏰' },
-    ...(isAdmin ? [{ name: 'Guildmaster Council', path: '/warden', icon: '🏛️' }] : []),
+    ...(isAdmin ? [{ name: 'Guildmaster Council', path: '/council', icon: '🏛️' }] : []),
     { name: 'Seeker Profile', path: '/profile', icon: '👤' },
   ];
 
@@ -48,6 +49,15 @@ export const Layout: React.FC<LayoutProps> = ({ children, isAdmin, syncMode }) =
         </div>
 
         <div className="mt-auto pt-6 border-t border-slate-700 space-y-4">
+          {/* Logout Button placed above Storage Mode */}
+          <button 
+            onClick={onLogout}
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] text-rose-500 hover:text-white hover:bg-rose-500/10 border border-rose-500/20 transition-all group"
+          >
+            <span className="group-hover:rotate-12 transition-transform">🔑</span>
+            Revoke Access
+          </button>
+
           <div className="bg-slate-900/50 p-4 rounded-2xl border border-slate-700 shadow-inner">
             <div className="flex justify-between items-center mb-1">
               <p className="text-[9px] text-slate-500 uppercase font-black tracking-widest">Storage Mode</p>
@@ -77,6 +87,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, isAdmin, syncMode }) =
               <span className="text-2xl">{item.icon}</span>
             </Link>
           ))}
+          <button 
+            onClick={onLogout}
+            className="p-2 text-rose-500 transition-transform active:scale-90"
+          >
+            <span className="text-2xl">🔑</span>
+          </button>
       </div>
     </div>
   );

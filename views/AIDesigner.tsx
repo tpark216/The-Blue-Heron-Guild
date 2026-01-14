@@ -1,322 +1,275 @@
 
 import React, { useState } from 'react';
-import { generateBadgeContent } from '../services/gemini';
-import { Badge, Domain, Difficulty, DesignChoice, BadgeShape } from '../types';
+import { suggestSingleTask, analyzeBadgeComplexity } from '../services/gemini';
+import { Badge, Domain, Difficulty, DesignChoice, BadgeProposal, BadgeRequirement } from '../types';
 
 interface AIDesignerProps {
-  onBadgeCreated: (badge: Badge) => void;
+  onProposePublic: (proposal: Omit<BadgeProposal, 'id' | 'userId' | 'userName' | 'status' | 'submittedAt'>) => void;
 }
 
-export const AIDesigner: React.FC<AIDesignerProps> = ({ onBadgeCreated }) => {
-  const [mode, setMode] = useState<'choice' | 'manual' | 'ai'>('choice');
-  const [topic, setTopic] = useState('');
-  const [goal, setGoal] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [preview, setPreview] = useState<Partial<Badge> | null>(null);
+type ForgeStep = 'basic-info' | 'ai-ask' | 'task-design' | 'complexity-review' | 'petition-details';
+
+export const AIDesigner: React.FC<AIDesignerProps> = ({ onProposePublic }) => {
+  const [step, setStep] = useState<ForgeStep>('basic-info');
+  const [isAIEnabled, setIsAIEnabled] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   
-  // Design State
+  // Badge Basic State
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [domain, setDomain] = useState<Domain>(Domain.SKILL);
   const [designChoice, setDesignChoice] = useState<DesignChoice>('template');
-  const [badgeShape, setBadgeShape] = useState<BadgeShape>('circle');
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
 
-  // Manual Creation State
-  const [manualBadge, setManualBadge] = useState<Partial<Badge>>({
-    title: '',
-    description: '',
-    domain: Domain.SKILL,
-    difficulty: Difficulty.ONE,
-    requirements: [
-      { id: '1', description: 'Trial one of mastery.', isCompleted: false },
-      { id: '2', description: 'Trial two of service.', isCompleted: false }
-    ]
-  });
+  // Curriculum State
+  const [requirements, setRequirements] = useState<BadgeRequirement[]>([]);
+  const [suggestedComplexity, setSuggestedComplexity] = useState<Difficulty>(Difficulty.THREE);
+  const [userComplexity, setUserComplexity] = useState<Difficulty>(Difficulty.THREE);
+
+  // Petition State
+  const [goal, setGoal] = useState('');
+  const [metrics, setMetrics] = useState('');
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setUploadedImage(reader.result as string);
-        setDesignChoice('upload');
-      };
+      reader.onloadend = () => setUploadedImage(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
 
-  const handleAIInvoke = async () => {
-    if (!topic || !goal) return;
-    setIsGenerating(true);
+  const addEmptyTask = () => {
+    const newReq: BadgeRequirement = {
+      id: `req-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+      description: '',
+      isCompleted: false,
+      requireAttachment: true,
+      requireNote: true
+    };
+    setRequirements([...requirements, newReq]);
+  };
+
+  const handleAISuggest = async () => {
+    setIsProcessing(true);
     try {
-      const result = await generateBadgeContent(topic, goal);
-      setPreview(result);
-    } catch (error) {
-      console.error(error);
+      const existing = requirements.map(r => r.description);
+      const taskText = await suggestSingleTask(title, description, existing);
+      const newReq: BadgeRequirement = {
+        id: `req-${Date.now()}`,
+        description: taskText,
+        isCompleted: false,
+        requireAttachment: true,
+        requireNote: true
+      };
+      setRequirements([...requirements, newReq]);
+    } catch (e) {
+      console.error(e);
     } finally {
-      setIsGenerating(false);
+      setIsProcessing(false);
     }
   };
 
-  const saveBadge = (data: Partial<Badge>) => {
-    const newBadge: Badge = {
-      ...data as Badge,
+  const handleToComplexity = async () => {
+    setIsProcessing(true);
+    try {
+      const rating = await analyzeBadgeComplexity(title, description, requirements);
+      setSuggestedComplexity(rating as Difficulty);
+      setUserComplexity(rating as Difficulty);
+      setStep('complexity-review');
+    } catch (e) {
+      setStep('complexity-review');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const submitToCouncil = () => {
+    const badge: Badge = {
       id: `custom-${Date.now()}`,
+      title,
+      description,
+      domain,
+      difficulty: userComplexity,
+      requirements,
       reflections: '',
       evidenceUrls: [],
       isVerified: false,
       isUserCreated: true,
-      icon: '✨',
       designChoice,
-      badgeShape,
-      visualAssetUrl: uploadedImage || undefined
+      visualAssetUrl: uploadedImage || undefined,
+      badgeShape: 'circle'
     };
-    onBadgeCreated(newBadge);
-    resetForm();
+    onProposePublic({ badge, goal, metrics });
+    resetForge();
   };
 
-  const resetForm = () => {
-    setPreview(null);
-    setMode('choice');
-    setDesignChoice('template');
-    setUploadedImage(null);
-    setTopic('');
+  const resetForge = () => {
+    setStep('basic-info');
+    setTitle('');
+    setDescription('');
+    setRequirements([]);
     setGoal('');
-    setBadgeShape('circle');
+    setMetrics('');
+    setUploadedImage(null);
   };
-
-  const renderStars = (rating: number) => {
-    return (
-      <div className="flex gap-0.5 text-amber-500">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <span key={star} className={star <= rating ? 'opacity-100' : 'opacity-20'}>
-            ★
-          </span>
-        ))}
-      </div>
-    );
-  };
-
-  const BadgeForgeUI = () => (
-    <div className="bg-slate-950 border-2 border-slate-800 p-8 rounded-[3rem] space-y-8 shadow-2xl relative overflow-hidden flex flex-col items-center">
-      <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-600 to-transparent"></div>
-      
-      <div className="w-full">
-        <h4 className="text-[11px] font-black uppercase text-amber-500 tracking-[0.3em] flex items-center gap-2 mb-6">
-          <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span> Artifact Geometry
-        </h4>
-        
-        {/* Shape Selector */}
-        <div className="grid grid-cols-3 gap-4 mb-10">
-          {(['circle', 'square', 'rectangle'] as BadgeShape[]).map(shape => (
-            <button 
-              key={shape}
-              type="button"
-              onClick={() => setBadgeShape(shape)}
-              className={`flex flex-col items-center gap-3 p-4 rounded-2xl border-2 transition-all group ${badgeShape === shape ? 'border-amber-500 bg-amber-500/10 shadow-[0_0_20px_rgba(245,158,11,0.1)]' : 'border-slate-800 bg-slate-900/50 opacity-60 hover:opacity-100'}`}
-            >
-              <div className={`w-8 h-8 border-2 transition-all ${badgeShape === shape ? 'border-amber-500' : 'border-slate-600'} ${shape === 'circle' ? 'rounded-full' : (shape === 'rectangle' ? 'rounded-sm aspect-[4/3] w-10 h-8 mt-1' : 'rounded-md')}`}></div>
-              <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">{shape}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="space-y-6 pt-6 border-t border-slate-900">
-          <p className="text-[11px] font-black uppercase text-slate-500 tracking-[0.3em]">Design Source</p>
-          <div className="grid grid-cols-1 gap-4">
-            <label className={`p-6 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all ${uploadedImage ? 'border-emerald-500 bg-emerald-500/5' : 'border-slate-800 hover:border-amber-500/50 hover:bg-slate-900'}`}>
-              <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} />
-              <div className="text-4xl mb-3">{uploadedImage ? '🖼️' : '📤'}</div>
-              <div className="text-[10px] font-black uppercase tracking-widest">{uploadedImage ? 'Design Received' : 'Upload Artifact Design'}</div>
-              <p className="text-[8px] text-slate-500 mt-2 uppercase tracking-tighter italic">Standard 4" x 4" physical format</p>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      {/* Real-time Forge Preview */}
-      <div className="pt-10 flex flex-col items-center">
-         <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.4em] mb-6 italic">The Forge Mirror</p>
-         <div className={`w-40 h-40 bg-slate-900 border-4 border-amber-500/20 shadow-[0_30px_60px_rgba(0,0,0,0.6)] flex items-center justify-center overflow-hidden transition-all duration-500 ${badgeShape === 'circle' ? 'rounded-full' : (badgeShape === 'rectangle' ? 'rounded-xl aspect-[4/3] w-48 h-36' : 'rounded-3xl')}`}>
-            {uploadedImage ? (
-              <img src={uploadedImage} className="w-full h-full object-cover animate-in fade-in duration-700" />
-            ) : (
-              <div className="text-4xl opacity-20 filter grayscale animate-pulse">📜</div>
-            )}
-         </div>
-         <p className="text-[8px] text-slate-600 mt-6 max-w-[200px] text-center uppercase tracking-widest leading-relaxed">
-           "Whether circle, square, or rectangle, the artifact occupies a standard 4-inch footprint."
-         </p>
-      </div>
-    </div>
-  );
 
   return (
-    <div className="max-w-6xl mx-auto space-y-12 pb-24">
-      <div className="text-center animate-in fade-in slide-in-from-top-4 duration-700">
-        <h2 className="text-5xl font-bold guild-font tracking-tight text-slate-100">The Forge of Inscriptions</h2>
-        <p className="text-slate-400 mt-3 text-lg italic max-w-2xl mx-auto font-serif">Seekers do not merely earn badges; they define the geometry of their own mastery.</p>
+    <div className="max-w-4xl mx-auto py-12 px-6">
+      <div className="text-center mb-16">
+        <h2 className="text-5xl font-bold guild-font text-slate-100">Forge of Inscriptions</h2>
+        <p className="text-slate-400 mt-4 italic font-serif">"Every mastery begins with a single defined trial."</p>
       </div>
 
-      {mode === 'choice' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 animate-in fade-in zoom-in-95 duration-500">
-          <button 
-            onClick={() => setMode('manual')}
-            className="group bg-slate-900 border-2 border-slate-800 p-12 rounded-[3rem] text-left hover:border-amber-500/40 transition-all flex flex-col items-start space-y-6 shadow-2xl"
-          >
-            <div className="text-5xl bg-slate-800 p-5 rounded-3xl group-hover:bg-amber-500/10 group-hover:scale-110 transition-all shadow-xl">🛠️</div>
-            <div>
-              <h3 className="text-3xl font-bold guild-font text-slate-100">Manual Forge</h3>
-              <p className="text-slate-400 mt-2 leading-relaxed text-sm">Forge every trial and visual sigil with your own intent. No Oracle intervention.</p>
-            </div>
-            <span className="text-amber-500 font-bold text-[10px] uppercase tracking-[0.4em] mt-auto group-hover:translate-x-4 transition-transform">Begin Drafting →</span>
-          </button>
-
-          <button 
-            onClick={() => setMode('ai')}
-            className="group bg-slate-950 border-2 border-amber-500/10 p-12 rounded-[3rem] text-left hover:border-amber-500/40 transition-all flex flex-col items-start space-y-6 relative overflow-hidden shadow-2xl"
-          >
-            <div className="absolute top-0 right-0 p-8 text-amber-500 opacity-5 text-9xl group-hover:opacity-10 transition-all pointer-events-none">✨</div>
-            <div className="text-5xl bg-amber-500/10 p-5 rounded-3xl group-hover:scale-110 transition-all shadow-xl">🔮</div>
-            <div>
-              <h3 className="text-3xl font-bold guild-font text-amber-500">Oracle Weaving</h3>
-              <p className="text-slate-400 mt-2 leading-relaxed text-sm">Consult the High Council's Oracle to weave a balanced curriculum of physical trials.</p>
-            </div>
-            <span className="text-amber-500 font-bold text-[10px] uppercase tracking-[0.4em] mt-auto group-hover:translate-x-4 transition-transform">Consult the Sight →</span>
-          </button>
-        </div>
-      )}
-
-      {(mode === 'ai' || mode === 'manual') && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start animate-in slide-in-from-bottom-8 duration-700">
-          <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800 rounded-[3.5rem] p-12 space-y-10 shadow-3xl">
-            <button onClick={() => setMode('choice')} className="text-[10px] text-slate-500 hover:text-white uppercase font-black tracking-[0.3em] flex items-center gap-3 group transition-colors">
-               <span className="text-xl group-hover:-translate-x-2 transition-transform">←</span> Return to Archive Entrance
-            </button>
-            
-            {mode === 'ai' ? (
-              <div className="space-y-8">
+      <div className="bg-slate-900 border border-slate-800 rounded-[3rem] p-10 shadow-3xl min-h-[500px] flex flex-col">
+        {step === 'basic-info' && (
+          <div className="space-y-8 animate-in fade-in duration-500">
+            <h3 className="text-2xl font-bold guild-font text-amber-500 border-b border-slate-800 pb-4">Step I: Identify the Craft</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              <div className="space-y-6">
                 <div>
-                  <label className="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-4">Mastery Topic</label>
-                  <input 
-                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-5 text-slate-100 focus:border-amber-500/50 focus:outline-none transition-all shadow-inner" 
-                    placeholder="e.g. Lunar Navigation" 
-                    value={topic}
-                    onChange={e => setTopic(e.target.value)}
-                  />
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Inscription Title</label>
+                  <input className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-slate-100" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Master of Woodcraft" />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-4">The Seeker's Intent</label>
-                  <textarea 
-                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-5 text-slate-100 focus:border-amber-500/50 focus:outline-none transition-all shadow-inner font-serif" 
-                    rows={4} 
-                    placeholder="Describe the ultimate mastery you seek..."
-                    value={goal}
-                    onChange={e => setGoal(e.target.value)}
-                  />
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Discipline Domain</label>
+                  <select className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-slate-100" value={domain} onChange={e => setDomain(e.target.value as Domain)}>
+                    {Object.values(Domain).map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
                 </div>
-                <button 
-                  onClick={handleAIInvoke}
-                  disabled={isGenerating || !topic || !goal}
-                  className="w-full py-6 bg-amber-600 hover:bg-amber-500 text-slate-950 font-black rounded-2xl transition-all shadow-2xl shadow-amber-900/30 disabled:opacity-50 uppercase tracking-[0.3em] text-xs"
-                >
-                  {isGenerating ? 'The Oracle is Speaking...' : 'Summon Curriculum'}
-                </button>
+                <div>
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Detailed Description</label>
+                  <textarea className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-slate-100 h-32" value={description} onChange={e => setDescription(e.target.value)} placeholder="What knowledge will be gained?" />
+                </div>
               </div>
-            ) : (
-              <div className="space-y-8">
-                <div>
-                  <label className="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-4">Inscription Title</label>
-                  <input 
-                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-5 text-slate-100 focus:border-amber-500/50 focus:outline-none shadow-inner" 
-                    value={manualBadge.title}
-                    onChange={e => setManualBadge({...manualBadge, title: e.target.value})}
-                  />
+              <div className="space-y-6">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Visual Sigil Choice</p>
+                <div className="flex gap-4">
+                  <button onClick={() => setDesignChoice('template')} className={`flex-1 py-4 border-2 rounded-xl text-xs font-bold transition-all ${designChoice === 'template' ? 'border-amber-500 bg-amber-500/10 text-amber-500' : 'border-slate-800 text-slate-600'}`}>Guild Designed</button>
+                  <button onClick={() => setDesignChoice('upload')} className={`flex-1 py-4 border-2 rounded-xl text-xs font-bold transition-all ${designChoice === 'upload' ? 'border-amber-500 bg-amber-500/10 text-amber-500' : 'border-slate-800 text-slate-600'}`}>Custom Upload</button>
                 </div>
-                <div className="grid grid-cols-2 gap-6">
-                   <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-4">Domain</label>
-                      <select 
-                        className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-5 text-slate-100 appearance-none"
-                        value={manualBadge.domain}
-                        onChange={e => setManualBadge({...manualBadge, domain: e.target.value as Domain})}
-                      >
-                        {Object.values(Domain).map(d => <option key={d} value={d}>{d}</option>)}
-                      </select>
-                   </div>
-                   <div>
-                      <label className="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-4">Complexity (Stars)</label>
-                      <select 
-                        className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-5 text-slate-100 appearance-none"
-                        value={manualBadge.difficulty}
-                        onChange={e => setManualBadge({...manualBadge, difficulty: parseInt(e.target.value) as Difficulty})}
-                      >
-                        {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v} Star{v > 1 ? 's' : ''} ({v === 1 ? 'Quick' : v === 5 ? 'Vast' : 'Steady'})</option>)}
-                      </select>
-                   </div>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-4">Description</label>
-                  <textarea 
-                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-5 text-slate-100 focus:border-amber-500/50 focus:outline-none shadow-inner font-serif" 
-                    rows={4}
-                    value={manualBadge.description}
-                    onChange={e => setManualBadge({...manualBadge, description: e.target.value})}
-                  />
-                </div>
-                <button 
-                  onClick={() => saveBadge(manualBadge)}
-                  className="w-full py-6 bg-amber-600 hover:bg-amber-500 text-slate-950 font-black rounded-2xl transition-all shadow-2xl uppercase tracking-[0.3em] text-xs"
-                >
-                  Seal Custom Inscription
-                </button>
+                {designChoice === 'upload' && (
+                  <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-800 rounded-2xl p-6 cursor-pointer hover:bg-slate-950 transition-all">
+                    <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} />
+                    {uploadedImage ? <img src={uploadedImage} className="w-24 h-24 object-cover rounded-lg mb-2" /> : <span className="text-3xl mb-2">🖼️</span>}
+                    <span className="text-[10px] uppercase font-black text-slate-500">{uploadedImage ? 'Sigil Loaded' : 'Select Artifact Image'}</span>
+                  </label>
+                )}
               </div>
-            )}
+            </div>
+            <button disabled={!title || !description} onClick={() => setStep('ai-ask')} className="mt-auto w-full py-5 bg-amber-600 text-slate-950 font-black rounded-2xl uppercase tracking-[0.2em] shadow-xl disabled:opacity-50">Continue to Trials</button>
           </div>
+        )}
 
-          <div className="space-y-10">
-            <BadgeForgeUI />
-            
-            {preview && (
-              <div className="bg-slate-950/80 border-2 border-emerald-500/20 p-10 rounded-[3rem] space-y-8 animate-in slide-in-from-right-12 duration-700 shadow-3xl relative overflow-hidden backdrop-blur-xl">
-                 <div className="absolute top-0 right-0 bg-emerald-600 text-[10px] font-black px-6 py-2 rounded-bl-3xl uppercase tracking-widest shadow-xl">The Revelation</div>
-                 <div className="flex justify-between items-start gap-6">
-                    <div className="flex flex-col gap-2">
-                      <h3 className="text-4xl font-bold text-emerald-400 guild-font leading-tight">{preview.title}</h3>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Complexity:</span>
-                        {renderStars(preview.difficulty || 1)}
+        {step === 'ai-ask' && (
+          <div className="flex flex-col items-center justify-center flex-1 space-y-10 animate-in zoom-in-95 duration-500">
+            <span className="text-7xl">🔮</span>
+            <div className="text-center space-y-4">
+              <h3 className="text-3xl font-bold guild-font">Consult the AI Oracle?</h3>
+              <p className="text-slate-400 italic font-serif">"Shall the Oracle suggest rigorous trials based on your description?"</p>
+            </div>
+            <div className="flex gap-6 w-full max-w-sm">
+              <button onClick={() => { setIsAIEnabled(false); setStep('task-design'); }} className="flex-1 py-4 border border-slate-700 rounded-xl font-bold text-slate-500 hover:text-white transition-all uppercase text-[10px]">No, I am the Architect</button>
+              <button onClick={() => { setIsAIEnabled(true); setStep('task-design'); }} className="flex-1 py-4 bg-amber-600 text-slate-950 rounded-xl font-black uppercase text-[10px] tracking-widest">Invoke the Oracle</button>
+            </div>
+          </div>
+        )}
+
+        {step === 'task-design' && (
+          <div className="space-y-6 flex-1 flex flex-col animate-in slide-in-from-right-12">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-4">
+              <h3 className="text-xl font-bold guild-font">Step II: The Trials</h3>
+              {isAIEnabled && (
+                <button onClick={handleAISuggest} disabled={isProcessing} className="bg-amber-500/10 border border-amber-500/30 text-amber-500 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 hover:text-slate-950 transition-all">
+                  {isProcessing ? 'Weaving...' : '✨ Suggest Task'}
+                </button>
+              )}
+            </div>
+            <div className="flex-1 space-y-4 overflow-y-auto max-h-[400px] pr-2 scrollbar-hide">
+              {requirements.map((req, idx) => (
+                <div key={req.id} className="bg-slate-950/50 p-6 rounded-2xl border border-slate-800 space-y-4">
+                  <div className="flex gap-4">
+                    <span className="text-amber-500 font-serif font-bold italic">{idx + 1}.</span>
+                    <textarea className="flex-1 bg-transparent border-none focus:outline-none text-slate-200 text-sm h-20" placeholder="Describe the trial..." value={req.description} onChange={e => {
+                      const updated = [...requirements];
+                      updated[idx].description = e.target.value;
+                      setRequirements(updated);
+                    }} />
+                    <button onClick={() => setRequirements(requirements.filter(r => r.id !== req.id))} className="text-slate-600 hover:text-rose-500 transition-colors">✕</button>
+                  </div>
+                  <div className="flex gap-8 pl-8 border-t border-slate-900 pt-4">
+                    <button onClick={() => {
+                      const updated = [...requirements];
+                      updated[idx].requireAttachment = !updated[idx].requireAttachment;
+                      setRequirements(updated);
+                    }} className="flex items-center gap-2 group">
+                      <div className={`w-8 h-4 rounded-full transition-all relative ${req.requireAttachment ? 'bg-amber-600' : 'bg-slate-800'}`}>
+                        <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${req.requireAttachment ? 'right-0.5' : 'left-0.5'}`} />
                       </div>
-                    </div>
-                    <div className={`w-24 h-24 border-2 border-emerald-500/40 overflow-hidden shrink-0 shadow-2xl ${badgeShape === 'circle' ? 'rounded-full' : (badgeShape === 'rectangle' ? 'rounded-xl' : 'rounded-2xl')}`}>
-                       {uploadedImage ? (
-                         <img src={uploadedImage} alt="Forge Art" className="w-full h-full object-cover" />
-                       ) : (
-                         <div className="w-full h-full bg-slate-900 flex items-center justify-center text-4xl">✨</div>
-                       )}
-                    </div>
-                 </div>
-                 <p className="text-slate-400 text-lg leading-relaxed italic font-serif border-l-2 border-emerald-500/20 pl-6">"{preview.description}"</p>
-                 <div className="space-y-4 pt-4">
-                    <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-2">
-                       <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> The Weaving of Trials:
-                    </p>
-                    <ul className="space-y-3">
-                       {preview.requirements?.map((req, i) => (
-                         <li key={i} className="flex items-start gap-4">
-                           <span className="text-emerald-500 font-bold font-serif">{i + 1}.</span>
-                           <span className="text-slate-300 text-sm leading-tight">{req.description}</span>
-                         </li>
-                       ))}
-                    </ul>
-                 </div>
-                 <div className="flex gap-4 pt-6">
-                    <button onClick={() => setPreview(null)} className="flex-1 py-4 rounded-xl border border-slate-800 font-bold text-slate-500 hover:text-white transition-all text-xs uppercase tracking-widest">Discard Sight</button>
-                    <button onClick={() => saveBadge(preview)} className="flex-[2] py-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black transition-all shadow-xl text-xs uppercase tracking-widest">Inscribe to Journal</button>
-                 </div>
-              </div>
-            )}
+                      <span className="text-[9px] font-black uppercase text-slate-500 group-hover:text-slate-300">File Needed</span>
+                    </button>
+                    <button onClick={() => {
+                      const updated = [...requirements];
+                      updated[idx].requireNote = !updated[idx].requireNote;
+                      setRequirements(updated);
+                    }} className="flex items-center gap-2 group">
+                      <div className={`w-8 h-4 rounded-full transition-all relative ${req.requireNote ? 'bg-amber-600' : 'bg-slate-800'}`}>
+                        <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${req.requireNote ? 'right-0.5' : 'left-0.5'}`} />
+                      </div>
+                      <span className="text-[9px] font-black uppercase text-slate-500 group-hover:text-slate-300">Reflection Needed</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <button onClick={addEmptyTask} className="w-full py-6 border-2 border-dashed border-slate-800 rounded-2xl text-slate-500 hover:text-amber-500 hover:border-amber-500/50 transition-all font-bold text-xs uppercase">+ Add Trial Line</button>
+            </div>
+            <div className="flex gap-4 pt-4 mt-auto">
+              <button onClick={() => setStep('ai-ask')} className="flex-1 py-4 border border-slate-800 rounded-xl text-slate-500 uppercase font-black text-[10px]">Back</button>
+              <button disabled={requirements.length === 0} onClick={handleToComplexity} className="flex-[2] py-4 bg-amber-600 text-slate-950 font-black rounded-xl uppercase tracking-widest text-[10px] shadow-xl">Analyze Complexity</button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {step === 'complexity-review' && (
+          <div className="flex flex-col items-center justify-center flex-1 space-y-12 animate-in zoom-in-95">
+            <div className="text-center space-y-2">
+              <h3 className="text-3xl font-bold guild-font">Step III: The Weight</h3>
+              <p className="text-slate-400 font-serif italic">"Does this rating reflect the true labor required?"</p>
+            </div>
+            <div className="flex flex-col items-center gap-6">
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map(v => (
+                  <button key={v} onClick={() => setUserComplexity(v as Difficulty)} className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold transition-all ${userComplexity === v ? 'bg-amber-500 text-slate-950 scale-110 shadow-lg' : 'bg-slate-800 text-slate-500 hover:bg-slate-700'}`}>
+                    {v} ★
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-amber-500/50 font-black uppercase tracking-widest">Oracle's Suggestion: {suggestedComplexity} Stars</p>
+            </div>
+            <button onClick={() => setStep('petition-details')} className="w-full max-w-sm py-5 bg-amber-600 text-slate-950 font-black rounded-2xl uppercase tracking-widest text-[10px] shadow-xl">Confirm Rating & Finalize</button>
+          </div>
+        )}
+
+        {step === 'petition-details' && (
+          <div className="space-y-8 animate-in slide-in-from-bottom-12">
+            <h3 className="text-2xl font-bold guild-font text-amber-500 border-b border-slate-800 pb-4">Step IV: The Petition</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Final Goal Statement</label>
+                <textarea className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-slate-100 h-40" value={goal} onChange={e => setGoal(e.target.value)} placeholder="Sum up the impact of this mastery..." />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Success Metrics</label>
+                <textarea className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-slate-100 h-40" value={metrics} onChange={e => setMetrics(e.target.value)} placeholder="How do we measure success?" />
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <button onClick={() => setStep('complexity-review')} className="flex-1 py-4 border border-slate-800 rounded-xl text-slate-500 uppercase font-black text-[10px]">Back</button>
+              <button onClick={submitToCouncil} className="flex-[2] py-4 bg-amber-600 text-slate-950 font-black rounded-xl uppercase tracking-widest text-[10px] shadow-xl">Seal Petition to Council</button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

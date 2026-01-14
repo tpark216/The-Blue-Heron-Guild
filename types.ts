@@ -4,7 +4,7 @@ export enum Tier {
   WAYFARER = 'Wayfarer',
   JOURNEYER = 'Journeyer',
   ARTISAN = 'Artisan',
-  WARDEN = 'Warden',
+  GUILDMASTER = 'Guildmaster',
   KEYSTONE = 'Keystone'
 }
 
@@ -34,6 +34,8 @@ export interface BadgeRequirement {
   isCompleted: boolean;
   evidenceUrl?: string;
   evidenceNote?: string;
+  requireAttachment: boolean;
+  requireNote: boolean;
 }
 
 export type DesignChoice = 'upload' | 'request' | 'template';
@@ -55,6 +57,16 @@ export interface Badge {
   badgeShape: BadgeShape;
 }
 
+export type CouncilStatus = 'pending' | 'approved' | 'rejected' | 'needs_info';
+
+export interface ActionStatement {
+  requirementTitle: string;
+  intent: string;
+  difficulties: string;
+  lessons: string;
+  referenceContact: string;
+}
+
 export interface VerificationRequest {
   id: string;
   userId: string;
@@ -62,7 +74,32 @@ export interface VerificationRequest {
   badgeId: string;
   badgeTitle: string;
   submittedAt: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: CouncilStatus;
+  rejectionReason?: string;
+}
+
+export interface PromotionRequest {
+  id: string;
+  userId: string;
+  userName: string;
+  targetTier: Tier;
+  supportingBadgeIds: string[];
+  actionStatements: ActionStatement[];
+  status: CouncilStatus;
+  councilFeedback?: string;
+  submittedAt: string;
+}
+
+export interface BadgeProposal {
+  id: string;
+  userId: string;
+  userName: string;
+  badge: Badge;
+  goal: string;
+  metrics: string;
+  status: CouncilStatus;
+  rejectionReason?: string;
+  submittedAt: string;
 }
 
 export interface Colony {
@@ -93,6 +130,7 @@ export interface UserProfile {
   email: string;
   tier: Tier;
   badges: Badge[];
+  showcasedBadgeIds: string[];
   colonyId?: string;
   isScholarshipRecipient: boolean;
   prefPhysicalBadge: boolean;
@@ -108,4 +146,6 @@ export interface AppState {
   colonies: Colony[];
   accessFundBalance: number;
   verificationRequests: VerificationRequest[];
+  badgeProposals: BadgeProposal[];
+  promotionRequests: PromotionRequest[];
 }

@@ -1,9 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Tier } from '../types';
 
 export const Landing: React.FC = () => {
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
+
   const tiers = [
     {
       rank: Tier.SEEKER,
@@ -30,7 +33,7 @@ export const Landing: React.FC = () => {
       description: 'Mastery takes form. An artisan gives back as they climb.'
     },
     {
-      rank: Tier.WARDEN,
+      rank: Tier.GUILDMASTER,
       icon: '🛡️',
       requirements: ['Earn 20+ badges', 'Lead service projects', 'Design a community badge'],
       description: 'A protector of the guild values and a leader of the colonies.'
@@ -43,8 +46,52 @@ export const Landing: React.FC = () => {
     }
   ];
 
+  const tutorialSteps = [
+    {
+      title: "Welcome to the Grove",
+      icon: "🪶",
+      content: "The Blue Heron Guild is a decentralized ledger of adult mastery. Unlike traditional platforms, we don't own your data—you do. This is the Great Ascent, the roadmap of your journey from Seeker to Keystone."
+    },
+    {
+      title: "The Sovereign Signet",
+      icon: "🔒",
+      content: "Data Sovereignty is our foundational law. When you join, you forge a cryptographic Signet. Your journal entries, evidence, and reflections are encrypted with your private key and stored locally or in your personal cloud. The Guild never sees your work unless you petition for verification."
+    },
+    {
+      title: "The Badge Journal",
+      icon: "📜",
+      content: "Your Journal is your private workshop. Here you track progress on 'Trials'. Some trials require physical evidence (attachments), while others require deep synthesis (reflections). You decide when a trial is complete."
+    },
+    {
+      title: "The AI Weaver",
+      icon: "✨",
+      content: "Can't find a path that fits your goal? The AI Weaver (Oracle) helps you forge custom inscriptions. You define the title and domain, and the Oracle suggests rigorous, scout-style trials. Once finalized, you can petition the Council to make your badge official for everyone."
+    },
+    {
+      title: "Colonies & Community",
+      icon: "🏰",
+      content: "Mastery is not a solo flight. Colonies are local nodes where Seekers meet to practice and mentor. As you reach Artisan tier, you'll begin mentoring others, strengthening the entire guild network."
+    },
+    {
+      title: "The High Council",
+      icon: "🏛️",
+      content: "The Guildmaster Council oversees the High Registry. They review badge proposals for rigor and verify 'Mastery Seals' for promotion. Their goal is to maintain the standard of excellence across all colonies."
+    }
+  ];
+
   return (
-    <div className="space-y-16 pb-24">
+    <div className="space-y-16 pb-24 relative">
+      {/* Tutorial Button - Top Right */}
+      <div className="absolute top-0 right-0 z-40 animate-in fade-in slide-in-from-right-4 duration-1000">
+        <button 
+          onClick={() => { setShowTutorial(true); setTutorialStep(0); }}
+          className="group flex items-center gap-3 bg-slate-950/50 hover:bg-amber-600 border border-amber-500/30 hover:border-amber-400 px-6 py-3 rounded-2xl transition-all shadow-2xl"
+        >
+          <span className="text-xl group-hover:rotate-12 transition-transform">📖</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-500 group-hover:text-slate-950">Seeker's Orientation</span>
+        </button>
+      </div>
+
       <header className="text-center space-y-6 max-w-4xl mx-auto py-12 animate-in fade-in slide-in-from-top-10 duration-1000">
         <div className="flex justify-center mb-4">
            <span className="text-7xl drop-shadow-[0_0_20px_rgba(251,191,36,0.5)]">🪶</span>
@@ -106,6 +153,64 @@ export const Landing: React.FC = () => {
             <span className="text-4xl">⚖️</span>
          </div>
       </footer>
+
+      {/* Tutorial Overlay */}
+      {showTutorial && (
+        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="bg-slate-900 border border-amber-500/30 rounded-[3.5rem] p-10 md:p-16 max-w-2xl w-full shadow-[0_0_100px_rgba(251,191,36,0.1)] relative">
+            <button 
+              onClick={() => setShowTutorial(false)}
+              className="absolute top-10 right-10 text-slate-500 hover:text-white transition-colors text-xl"
+            >✕</button>
+
+            <div className="text-center space-y-8">
+              <div className="flex justify-center">
+                <div className="w-24 h-24 bg-amber-500/10 border-2 border-amber-500/50 rounded-full flex items-center justify-center text-5xl animate-bounce shadow-2xl">
+                  {tutorialSteps[tutorialStep].icon}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-3xl font-bold guild-font text-amber-500">{tutorialSteps[tutorialStep].title}</h3>
+                <div className="flex justify-center gap-2 mb-4">
+                  {tutorialSteps.map((_, i) => (
+                    <div key={i} className={`h-1.5 rounded-full transition-all ${i === tutorialStep ? 'w-8 bg-amber-500' : 'w-2 bg-slate-800'}`}></div>
+                  ))}
+                </div>
+                <p className="text-slate-300 text-lg leading-relaxed font-serif italic border-l-4 border-amber-500/20 pl-8 text-left">
+                  {tutorialSteps[tutorialStep].content}
+                </p>
+              </div>
+
+              <div className="flex gap-4 pt-10">
+                {tutorialStep > 0 && (
+                  <button 
+                    onClick={() => setTutorialStep(tutorialStep - 1)}
+                    className="flex-1 py-4 border border-slate-700 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-500 hover:text-white transition-all"
+                  >
+                    Back
+                  </button>
+                )}
+                {tutorialStep < tutorialSteps.length - 1 ? (
+                  <button 
+                    onClick={() => setTutorialStep(tutorialStep + 1)}
+                    className="flex-[2] py-4 bg-amber-600 text-slate-950 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-amber-500 transition-all"
+                  >
+                    Next Revelation
+                  </button>
+                ) : (
+                  <button 
+                    onClick={() => setShowTutorial(false)}
+                    className="flex-[2] py-4 bg-emerald-600 text-slate-950 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-emerald-500 transition-all"
+                  >
+                    Begin Your Ascent
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
