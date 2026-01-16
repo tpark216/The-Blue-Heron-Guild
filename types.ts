@@ -1,10 +1,11 @@
 
 export enum Tier {
+  MEMBER = 'Member',
   SEEKER = 'Seeker',
   WAYFARER = 'Wayfarer',
   JOURNEYER = 'Journeyer',
   ARTISAN = 'Artisan',
-  GUILDMASTER = 'Guildmaster',
+  WARDEN = 'Warden',
   KEYSTONE = 'Keystone'
 }
 
@@ -40,31 +41,76 @@ export interface BadgeRequirement {
 
 export type DesignChoice = 'upload' | 'request' | 'template';
 
+export interface UsefulLink {
+  label: string;
+  url: string;
+}
+
 export interface Badge {
   id: string;
   title: string;
   description: string;
   domain: Domain;
+  secondaryDomains?: Domain[];
   difficulty: Difficulty;
   requirements: BadgeRequirement[];
   reflections: string;
   evidenceUrls: string[];
   isVerified: boolean;
   isUserCreated: boolean;
+  creatorId?: string; // 'guildmaster' or user.id
   icon?: string;
   designChoice: DesignChoice;
   visualAssetUrl?: string;
   badgeShape: BadgeShape;
+  usefulLinks?: UsefulLink[];
+  partnerName?: string;
+  isPartnership?: boolean;
 }
 
 export type CouncilStatus = 'pending' | 'approved' | 'rejected' | 'needs_info';
 
+export interface LinkSuggestion {
+  id: string;
+  badgeId: string;
+  badgeTitle: string;
+  userId: string;
+  userName: string;
+  label: string;
+  url: string;
+  status: CouncilStatus;
+  submittedAt: string;
+}
+
+export interface PartnershipRequest {
+  id: string;
+  userId: string;
+  userName: string;
+  partnerName: string;
+  partnerType: 'Organization' | 'Creator' | 'Institution';
+  description: string;
+  websiteUrl?: string;
+  status: CouncilStatus;
+  submittedAt: string;
+}
+
+export interface PhysicalBadgeRequest {
+  id: string;
+  userId: string;
+  badgeId: string;
+  badgeTitle: string;
+  status: CouncilStatus;
+  cost: number;
+  submittedAt: string;
+}
+
 export interface ActionStatement {
+  requirementId: string;
   requirementTitle: string;
   intent: string;
   difficulties: string;
   lessons: string;
-  referenceContact: string;
+  referenceContact: string; 
 }
 
 export interface VerificationRequest {
@@ -102,6 +148,24 @@ export interface BadgeProposal {
   submittedAt: string;
 }
 
+export interface ColonyEvent {
+  id: string;
+  colonyId: string;
+  title: string;
+  description: string;
+  date: string;
+  creatorName: string;
+  attendees: string[]; // user names for simplicity
+}
+
+export interface ColonyNotice {
+  id: string;
+  colonyId: string;
+  author: string;
+  content: string;
+  timestamp: string;
+}
+
 export interface Colony {
   id: string;
   name: string;
@@ -110,6 +174,8 @@ export interface Colony {
   charter: string;
   membersCount: number;
   isApproved: boolean;
+  notices: ColonyNotice[];
+  events: ColonyEvent[];
 }
 
 export interface PrivacySettings {
@@ -138,6 +204,13 @@ export interface UserProfile {
   serviceMilestones: number;
   privacy: PrivacySettings;
   security?: SecurityCredentials;
+  claimedFreePhysicalBadgeIds: string[]; // Track which badges got their free physical copy
+}
+
+export interface TierRequirement {
+  id: string;
+  description: string;
+  needsStatement: boolean;
 }
 
 export interface AppState {
@@ -148,4 +221,7 @@ export interface AppState {
   verificationRequests: VerificationRequest[];
   badgeProposals: BadgeProposal[];
   promotionRequests: PromotionRequest[];
+  linkSuggestions: LinkSuggestion[];
+  partnershipRequests: PartnershipRequest[];
+  physicalBadgeRequests: PhysicalBadgeRequest[];
 }

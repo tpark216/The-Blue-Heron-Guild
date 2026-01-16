@@ -13,25 +13,27 @@ export const Layout: React.FC<LayoutProps> = ({ children, isAdmin, syncMode, onL
   const location = useLocation();
 
   const navItems = [
-    { name: 'Great Ascent', path: '/', icon: '🏔️' },
     { name: 'Badge Journal', path: '/dashboard', icon: '📜' },
+    { name: 'Great Ascent', path: '/ascent', icon: '🏔️' },
     { name: 'The Archive', path: '/library', icon: '📚' },
-    { name: 'AI Weaver', path: '/designer', icon: '✨' },
+    { name: 'The Oracle', path: '/designer', icon: '✨' },
     { name: 'Colony Hub', path: '/colonies', icon: '🏰' },
     ...(isAdmin ? [{ name: 'Guildmaster Council', path: '/council', icon: '🏛️' }] : []),
-    { name: 'Seeker Profile', path: '/profile', icon: '👤' },
+    { name: 'Profile', path: '/profile', icon: '👤' },
   ];
 
   return (
     <div className="flex min-h-screen bg-slate-900 text-slate-100 overflow-hidden">
       {/* Sidebar */}
-      <nav className="w-64 bg-slate-800 border-r border-slate-700 p-6 flex flex-col hidden md:flex">
+      <nav className="w-64 bg-slate-800 border-r border-slate-700 p-6 flex flex-col hidden md:flex shrink-0">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold guild-font guild-gold tracking-widest">BLUE HERON</h1>
-          <p className="text-[10px] text-slate-400 uppercase tracking-[0.3em]">The Guild Portal</p>
+          <Link to="/dashboard">
+            <h1 className="text-2xl font-bold guild-font guild-gold tracking-widest">BLUE HERON</h1>
+            <p className="text-[10px] text-slate-400 uppercase tracking-[0.3em]">The Guild Portal</p>
+          </Link>
         </div>
         
-        <div className="space-y-4 flex-1">
+        <div className="space-y-4 flex-1 overflow-y-auto scrollbar-hide">
           {navItems.map((item) => (
             <Link
               key={item.path}
@@ -49,7 +51,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, isAdmin, syncMode, onL
         </div>
 
         <div className="mt-auto pt-6 border-t border-slate-700 space-y-4">
-          {/* Logout Button placed above Storage Mode */}
           <button 
             onClick={onLogout}
             className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] text-rose-500 hover:text-white hover:bg-rose-500/10 border border-rose-500/20 transition-all group"

@@ -1,216 +1,172 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Tier } from '../types';
+import { Tier, Domain } from '../types';
+import { TIER_ASCENSION_MAP } from '../constants';
 
 export const Landing: React.FC = () => {
-  const [showTutorial, setShowTutorial] = useState(false);
-  const [tutorialStep, setTutorialStep] = useState(0);
+  const [selectedTier, setSelectedTier] = useState<Tier | null>(null);
 
-  const tiers = [
+  const domainDefinitions = [
     {
-      rank: Tier.SEEKER,
+      domain: Domain.IDEOLOGY,
+      title: 'Ideologies',
+      icon: '🧠',
+      content: 'Beliefs and institutions that guide the values that we share and communities we create. These can be political, religious, or ideological systems.'
+    },
+    {
+      domain: Domain.ETHICS,
+      title: 'Ethics',
+      icon: '⚖️',
+      content: "The rules and regulations that guide our community's progression and how we should treat those outside of our ideological beliefs and institutions."
+    },
+    {
+      domain: Domain.ENVIRONMENT,
+      title: 'Environment',
       icon: '🌿',
-      requirements: ['Complete Onboarding', 'Submit first badge proposal'],
-      description: 'The first step into the grove. A seeker looks for connection and purpose.'
+      content: 'The world in which our community inhabits and the duty we owe to it.'
     },
     {
-      rank: Tier.WAYFARER,
-      icon: '👣',
-      requirements: ['Earn 5 badges', 'Spanning at least 2 domains'],
-      description: 'A traveler of the mapped paths, beginning to synthesize diverse skills.'
-    },
-    {
-      rank: Tier.JOURNEYER,
-      icon: '🛶',
-      requirements: ['Earn 10 badges', 'Demonstrate sustained effort'],
-      description: 'Commitment to the long walk. The journeyer finds rhythm in growth.'
-    },
-    {
-      rank: Tier.ARTISAN,
-      icon: '⚒️',
-      requirements: ['Achieve depth in a skill area', 'Mentor at least one Seeker'],
-      description: 'Mastery takes form. An artisan gives back as they climb.'
-    },
-    {
-      rank: Tier.GUILDMASTER,
-      icon: '🛡️',
-      requirements: ['Earn 20+ badges', 'Lead service projects', 'Design a community badge'],
-      description: 'A protector of the guild values and a leader of the colonies.'
-    },
-    {
-      rank: Tier.KEYSTONE,
-      icon: '💎',
-      requirements: ['Earn 30+ badges', 'Capstone project with public impact', '12 Mandatory Keystone Badges'],
-      description: 'The pinnacle of ethical service and legacy. A foundation for the future.'
+      domain: Domain.SOCIETY,
+      title: 'Society',
+      icon: '🏗️',
+      content: 'The diverse communities that make our world or have shaped our world and the lessons we can take away from them. This is more sociological and anthropological in nature.'
     }
   ];
 
-  const tutorialSteps = [
-    {
-      title: "Welcome to the Grove",
-      icon: "🪶",
-      content: "The Blue Heron Guild is a decentralized ledger of adult mastery. Unlike traditional platforms, we don't own your data—you do. This is the Great Ascent, the roadmap of your journey from Seeker to Keystone."
-    },
-    {
-      title: "The Sovereign Signet",
-      icon: "🔒",
-      content: "Data Sovereignty is our foundational law. When you join, you forge a cryptographic Signet. Your journal entries, evidence, and reflections are encrypted with your private key and stored locally or in your personal cloud. The Guild never sees your work unless you petition for verification."
-    },
-    {
-      title: "The Badge Journal",
-      icon: "📜",
-      content: "Your Journal is your private workshop. Here you track progress on 'Trials'. Some trials require physical evidence (attachments), while others require deep synthesis (reflections). You decide when a trial is complete."
-    },
-    {
-      title: "The AI Weaver",
-      icon: "✨",
-      content: "Can't find a path that fits your goal? The AI Weaver (Oracle) helps you forge custom inscriptions. You define the title and domain, and the Oracle suggests rigorous, scout-style trials. Once finalized, you can petition the Council to make your badge official for everyone."
-    },
-    {
-      title: "Colonies & Community",
-      icon: "🏰",
-      content: "Mastery is not a solo flight. Colonies are local nodes where Seekers meet to practice and mentor. As you reach Artisan tier, you'll begin mentoring others, strengthening the entire guild network."
-    },
-    {
-      title: "The High Council",
-      icon: "🏛️",
-      content: "The Guildmaster Council oversees the High Registry. They review badge proposals for rigor and verify 'Mastery Seals' for promotion. Their goal is to maintain the standard of excellence across all colonies."
-    }
+  const tiers = [
+    { rank: Tier.MEMBER, icon: '🌱', label: 'The Foundation' },
+    { rank: Tier.SEEKER, icon: '🌿', label: 'Active Curiosity' },
+    { rank: Tier.WAYFARER, icon: '👣', label: 'The Path Forward' },
+    { rank: Tier.JOURNEYER, icon: '🛶', label: 'Colony Service' },
+    { rank: Tier.ARTISAN, icon: '⚒️', label: 'Expert Mastery' },
+    { rank: Tier.WARDEN, icon: '🛡️', label: 'Stewardship' },
+    { rank: Tier.KEYSTONE, icon: '💎', label: 'Pinnacle Influence' }
   ];
 
   return (
-    <div className="space-y-16 pb-24 relative">
-      {/* Tutorial Button - Top Right */}
-      <div className="absolute top-0 right-0 z-40 animate-in fade-in slide-in-from-right-4 duration-1000">
-        <button 
-          onClick={() => { setShowTutorial(true); setTutorialStep(0); }}
-          className="group flex items-center gap-3 bg-slate-950/50 hover:bg-amber-600 border border-amber-500/30 hover:border-amber-400 px-6 py-3 rounded-2xl transition-all shadow-2xl"
-        >
-          <span className="text-xl group-hover:rotate-12 transition-transform">📖</span>
-          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-500 group-hover:text-slate-950">Seeker's Orientation</span>
-        </button>
-      </div>
-
-      <header className="text-center space-y-6 max-w-4xl mx-auto py-12 animate-in fade-in slide-in-from-top-10 duration-1000">
-        <div className="flex justify-center mb-4">
-           <span className="text-7xl drop-shadow-[0_0_20px_rgba(251,191,36,0.5)]">🪶</span>
-        </div>
-        <h2 className="text-6xl font-bold guild-font tracking-tight text-slate-100">The Great Ascent</h2>
-        <p className="text-xl text-slate-400 font-serif italic leading-relaxed">
-          "The Heron does not fly the path alone. Every wingbeat strengthens the colony, and every height reached becomes a bridge for those who follow."
-        </p>
-        <div className="pt-8">
-          <Link to="/dashboard" className="bg-amber-600 hover:bg-amber-500 text-slate-950 px-12 py-4 rounded-2xl font-black text-sm uppercase tracking-[0.3em] transition-all shadow-2xl active:scale-95">
-            Enter My Journal
-          </Link>
-        </div>
+    <div className="space-y-16 pb-32 animate-in fade-in duration-1000">
+      <header className="text-center space-y-4 max-w-4xl mx-auto py-8">
+        <h2 className="text-5xl md:text-7xl font-bold guild-font tracking-tighter text-slate-100 uppercase leading-none">The Great Ascent</h2>
+        <p className="text-xl text-slate-400 font-serif italic max-w-2xl mx-auto">"An architected path of mastery, service, and sovereign identity."</p>
       </header>
 
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {tiers.map((t, i) => (
-          <div 
-            key={t.rank} 
-            className="bg-slate-800/40 border border-slate-700/50 p-8 rounded-[3rem] group hover:border-amber-500/40 transition-all shadow-xl hover:shadow-amber-500/5 relative overflow-hidden flex flex-col"
-            style={{ animationDelay: `${i * 100}ms` }}
-          >
-            <div className="absolute top-0 right-0 p-8 opacity-5 text-9xl group-hover:opacity-10 transition-all pointer-events-none">
-              {t.icon}
+      {/* Domain Information Blocks */}
+      <section className="bg-slate-950/50 border border-slate-800 p-8 md:p-12 rounded-[4rem] shadow-inner">
+        <div className="text-center mb-12">
+          <h3 className="text-3xl font-bold guild-font text-amber-500 uppercase tracking-widest">Domains of the Guild</h3>
+          <p className="text-slate-500 text-sm italic font-serif mt-2">The four pillars of our collective curricula.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {domainDefinitions.map((d) => (
+            <div key={d.domain} className="bg-slate-900 border border-slate-800 p-8 rounded-3xl space-y-4 hover:border-amber-500/30 transition-all group">
+              <div className="flex items-center gap-4">
+                <span className="text-4xl filter grayscale group-hover:grayscale-0 transition-all">{d.icon}</span>
+                <h4 className="text-xl font-bold guild-font text-slate-100 uppercase">{d.title}</h4>
+              </div>
+              <p className="text-slate-400 text-sm leading-relaxed font-serif italic">"{d.content}"</p>
             </div>
-            <div className="flex items-center gap-4 mb-6">
-               <span className="text-4xl bg-slate-900 p-4 rounded-2xl border border-slate-800 group-hover:scale-110 transition-transform">{t.icon}</span>
-               <div>
-                  <h3 className="text-2xl font-bold guild-font text-slate-100 group-hover:text-amber-500 transition-colors">{t.rank}</h3>
-                  <p className="text-[10px] text-amber-500/50 font-black uppercase tracking-widest">Ascension Level {i + 1}</p>
-               </div>
-            </div>
-            
-            <p className="text-slate-400 text-sm italic mb-8 leading-relaxed font-serif">"{t.description}"</p>
-            
-            <div className="space-y-4 mt-auto">
-               <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] border-b border-slate-700 pb-2">The Required Trials</p>
-               <ul className="space-y-3">
-                  {t.requirements.map((req, ridx) => (
-                    <li key={ridx} className="flex items-start gap-3 text-xs text-slate-300">
-                       <span className="text-amber-500">✦</span>
-                       <span className="leading-tight">{req}</span>
-                    </li>
-                  ))}
-               </ul>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </section>
 
-      <footer className="bg-slate-950 border-2 border-slate-800 p-12 rounded-[4rem] text-center max-w-3xl mx-auto shadow-3xl">
-         <h4 className="text-2xl font-bold guild-font text-amber-500 mb-4">The Sovereign Promise</h4>
-         <p className="text-slate-400 text-sm leading-relaxed italic font-serif">
-           "Your growth is yours alone. Our role is to witness, to verify, and to hold the space for your mastery. The Guild is not a destination, but the collective pulse of every Seeker who dares to forge a path."
-         </p>
-         <div className="mt-8 flex justify-center gap-12 grayscale opacity-30 hover:grayscale-0 hover:opacity-100 transition-all duration-700">
-            <span className="text-4xl">🏛️</span>
-            <span className="text-4xl">🌿</span>
-            <span className="text-4xl">⚖️</span>
-         </div>
-      </footer>
+      {/* Ascension Progression Visualization */}
+      <section className="space-y-12">
+        <div className="text-center">
+          <h3 className="text-3xl font-bold guild-font text-slate-100 uppercase tracking-widest">The Tiered Path</h3>
+          <p className="text-slate-500 text-sm mt-2 font-serif italic">Select a rank to view the paired Mandatory Keystones and ascension requirements.</p>
+        </div>
 
-      {/* Tutorial Overlay */}
-      {showTutorial && (
-        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
-          <div className="bg-slate-900 border border-amber-500/30 rounded-[3.5rem] p-10 md:p-16 max-w-2xl w-full shadow-[0_0_100px_rgba(251,191,36,0.1)] relative">
-            <button 
-              onClick={() => setShowTutorial(false)}
-              className="absolute top-10 right-10 text-slate-500 hover:text-white transition-colors text-xl"
-            >✕</button>
-
-            <div className="text-center space-y-8">
-              <div className="flex justify-center">
-                <div className="w-24 h-24 bg-amber-500/10 border-2 border-amber-500/50 rounded-full flex items-center justify-center text-5xl animate-bounce shadow-2xl">
-                  {tutorialSteps[tutorialStep].icon}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {tiers.map((t, i) => (
+            <button
+              key={t.rank}
+              onClick={() => setSelectedTier(t.rank)}
+              className={`bg-slate-800/40 border-2 p-8 rounded-[3rem] text-left group transition-all shadow-xl relative overflow-hidden flex flex-col hover:scale-[1.05] ${
+                selectedTier === t.rank ? 'border-amber-500 bg-amber-500/5' : 'border-slate-800 hover:border-amber-500/40'
+              }`}
+            >
+              <div className="flex items-center gap-4 mb-4">
+                <span className="text-4xl group-hover:rotate-12 transition-transform">{t.icon}</span>
+                <div>
+                  <h4 className="text-xl font-bold guild-font text-slate-100 uppercase tracking-tighter leading-none">{t.rank}</h4>
+                  <p className="text-[10px] text-amber-500 font-black uppercase tracking-widest mt-1">Tier {i}</p>
                 </div>
               </div>
+              <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-6">{t.label}</p>
+              <div className="mt-auto flex items-center justify-between text-amber-500/60 font-black text-[9px] uppercase tracking-widest">
+                <span>View Requirements</span>
+                <span className="text-lg">↗</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
 
-              <div className="space-y-4">
-                <h3 className="text-3xl font-bold guild-font text-amber-500">{tutorialSteps[tutorialStep].title}</h3>
-                <div className="flex justify-center gap-2 mb-4">
-                  {tutorialSteps.map((_, i) => (
-                    <div key={i} className={`h-1.5 rounded-full transition-all ${i === tutorialStep ? 'w-8 bg-amber-500' : 'w-2 bg-slate-800'}`}></div>
+      {/* Requirements Modal */}
+      {selectedTier && (
+        <div className="fixed inset-0 bg-slate-950/95 backdrop-blur-xl z-[100] flex items-center justify-center p-6 animate-in zoom-in-95 duration-300">
+          <div className="bg-slate-900 border-2 border-amber-500/30 rounded-[4rem] p-10 md:p-14 max-w-3xl w-full shadow-3xl relative overflow-y-auto max-h-[90vh] scrollbar-hide">
+            <button onClick={() => setSelectedTier(null)} className="absolute top-10 right-10 text-slate-500 hover:text-white text-xl p-2 transition-colors">✕</button>
+            
+            <div className="flex items-center gap-6 mb-12 border-b border-slate-800 pb-10">
+              <div className="text-7xl">
+                {tiers.find(t => t.rank === selectedTier)?.icon}
+              </div>
+              <div>
+                <h3 className="text-4xl font-bold guild-font text-slate-100 uppercase tracking-tighter leading-none">Ascending to {selectedTier}</h3>
+                <p className="text-amber-500 font-black text-xs uppercase tracking-[0.4em] mt-3">Mandatory Keystone Pairs & Milestones</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+              <div className="space-y-6">
+                <h4 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4 border-b border-slate-800 pb-2">Mandatory Keystones</h4>
+                <div className="space-y-4">
+                  {TIER_ASCENSION_MAP[selectedTier].filter(r => r.description.includes('Keystone')).map(k => (
+                    <div key={k.id} className="bg-slate-950 border border-amber-500/20 p-5 rounded-2xl flex items-center gap-4 group hover:border-amber-500 transition-all">
+                      <span className="text-2xl group-hover:scale-110 transition-transform">✨</span>
+                      <p className="text-xs text-slate-200 font-bold leading-tight">{k.description.replace('Master ', '')}</p>
+                    </div>
                   ))}
+                  {TIER_ASCENSION_MAP[selectedTier].filter(r => r.description.includes('Keystone')).length === 0 && (
+                    <div className="bg-slate-950/50 p-6 rounded-2xl border border-dashed border-slate-800 text-center">
+                      <p className="text-xs text-slate-600 italic">Universal orientation completed upon entry.</p>
+                    </div>
+                  )}
                 </div>
-                <p className="text-slate-300 text-lg leading-relaxed font-serif italic border-l-4 border-amber-500/20 pl-8 text-left">
-                  {tutorialSteps[tutorialStep].content}
-                </p>
               </div>
 
-              <div className="flex gap-4 pt-10">
-                {tutorialStep > 0 && (
-                  <button 
-                    onClick={() => setTutorialStep(tutorialStep - 1)}
-                    className="flex-1 py-4 border border-slate-700 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-500 hover:text-white transition-all"
-                  >
-                    Back
-                  </button>
-                )}
-                {tutorialStep < tutorialSteps.length - 1 ? (
-                  <button 
-                    onClick={() => setTutorialStep(tutorialStep + 1)}
-                    className="flex-[2] py-4 bg-amber-600 text-slate-950 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-amber-500 transition-all"
-                  >
-                    Next Revelation
-                  </button>
-                ) : (
-                  <button 
-                    onClick={() => setShowTutorial(false)}
-                    className="flex-[2] py-4 bg-emerald-600 text-slate-950 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-emerald-500 transition-all"
-                  >
-                    Begin Your Ascent
-                  </button>
-                )}
+              <div className="space-y-6">
+                <h4 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4 border-b border-slate-800 pb-2">Growth Milestones</h4>
+                <div className="space-y-3">
+                  {TIER_ASCENSION_MAP[selectedTier].filter(r => !r.description.includes('Keystone')).map(m => (
+                    <div key={m.id} className="bg-slate-800/50 border border-slate-700 p-4 rounded-xl flex items-start gap-4">
+                      <span className="text-amber-500 mt-1">●</span>
+                      <p className="text-xs text-slate-400 font-medium leading-relaxed">{m.description}</p>
+                    </div>
+                  ))}
+                  {TIER_ASCENSION_MAP[selectedTier].filter(r => !r.description.includes('Keystone')).length === 0 && (
+                    <div className="bg-slate-800/30 p-4 rounded-xl border border-dashed border-slate-700">
+                      <p className="text-xs text-slate-600 italic">Initial registry status secured.</p>
+                    </div>
+                  )}
+                </div>
               </div>
+            </div>
+
+            <div className="mt-12 pt-8 border-t border-slate-800 text-center">
+              <button onClick={() => setSelectedTier(null)} className="px-16 py-4 bg-amber-600 hover:bg-amber-500 text-slate-950 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl transition-all active:scale-95">Accept the Trial</button>
             </div>
           </div>
         </div>
       )}
+
+      <div className="text-center pt-12">
+        <Link to="/dashboard" className="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-12 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all">
+          Return to Badge Journal
+        </Link>
+      </div>
     </div>
   );
 };

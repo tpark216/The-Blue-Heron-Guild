@@ -150,7 +150,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
 
             <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
               <p className="text-[10px] text-amber-500/70 font-bold uppercase mb-1">The Seeker's Vow</p>
-              <p className="text-[10px] text-slate-400 italic">"I commit to the pursuit of mastery, the support of my Colony, and the ethical stewardship of the Guild's values."</p>
+              <p className="text-[10px] text-slate-400 italic">"I commit to the pursuit of mastery, to support my chosen communities, and the ethical stewardship of the Guild's mission to preserve agency and creativity."</p>
             </div>
 
             <button

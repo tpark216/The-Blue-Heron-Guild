@@ -1,101 +1,109 @@
 
-import { Domain, Difficulty, Badge, Tier, Colony } from './types';
+import { Domain, Difficulty, Badge, Tier, Colony, TierRequirement } from './types';
+
+export const TIER_ASCENSION_MAP: Record<Tier, TierRequirement[]> = {
+  [Tier.MEMBER]: [], // Starting Tier
+  [Tier.SEEKER]: [
+    { id: 'ts-k1', description: 'Master Ethics Keystone: "The Core Covenant"', needsStatement: false },
+    { id: 'ts-k2', description: 'Master Society Keystone: "Communal Genealogies"', needsStatement: false },
+    { id: 'ts-o1', description: 'Complete Seeker Onboarding Orientation', needsStatement: false },
+    { id: 'ts-o2', description: 'Submit an original trial design to the Oracle', needsStatement: true }
+  ],
+  [Tier.WAYFARER]: [
+    { id: 'tw-k1', description: 'Master Ideologies Keystone: "Pillars of Belief"', needsStatement: false },
+    { id: 'tw-k2', description: 'Master Environment Keystone: "Planetary Custodianship"', needsStatement: false },
+    { id: 'tw-o1', description: 'Maintain an active journal for 3 lunar cycles', needsStatement: true },
+    { id: 'tw-o2', description: 'Earn 3 standard domain badges', needsStatement: false }
+  ],
+  [Tier.JOURNEYER]: [
+    { id: 'tj-k1', description: 'Master Ethics Keystone: "Pluralistic Protocol"', needsStatement: false },
+    { id: 'tj-k2', description: 'Master Ideologies Keystone: "Institutional Dynamics"', needsStatement: false },
+    { id: 'tj-o1', description: 'Perform 10 hours of verified colony service', needsStatement: true }
+  ],
+  [Tier.ARTISAN]: [
+    { id: 'ta-k1', description: 'Master Society Keystone: "Sociological Synthesis"', needsStatement: false },
+    { id: 'ta-k2', description: 'Master Environment Keystone: "Ecological Integration"', needsStatement: false },
+    { id: 'ta-o1', description: 'Mentor a Seeker through their first 3 trials', needsStatement: true }
+  ],
+  [Tier.WARDEN]: [
+    { id: 'twa-k1', description: 'Master Ethics Keystone: "The Warden\'s Integrity"', needsStatement: false },
+    { id: 'twa-k2', description: 'Master Environment Keystone: "Restoration Duty"', needsStatement: false },
+    { id: 'twa-o1', description: 'Lead a multi-Seeker service initiative', needsStatement: true }
+  ],
+  [Tier.KEYSTONE]: [
+    { id: 'tk-k1', description: 'Master Ideologies Keystone: "Sovereign Systems"', needsStatement: false },
+    { id: 'tk-k2', description: 'Master Society Keystone: "Anthropological Legacy"', needsStatement: false },
+    { id: 'tk-o1', description: 'Forge a public legacy project impacting Guild sovereignty', needsStatement: true }
+  ]
+};
 
 export const INITIAL_BADGES: Badge[] = [
+  // --- THE 12 MANDATORY KEYSTONES ---
+  // Tier: Member -> Seeker
   {
-    id: 'b1',
-    title: 'Forest Stewardship',
-    description: 'Learn to care for local woodland ecosystems and identify native species.',
-    domain: Domain.ENVIRONMENT,
-    difficulty: Difficulty.TWO,
-    requirements: [
-      // Added requireAttachment and requireNote to satisfy the BadgeRequirement interface
-      { id: 'r1', description: 'Explain the concept of forest succession and the role of climax species in your local biome.', isCompleted: false, requireAttachment: true, requireNote: true },
-      { id: 'r2', description: 'Identify 10 native trees and 5 invasive plant species in a local woodland area.', isCompleted: false, requireAttachment: true, requireNote: true },
-      { id: 'r3', description: 'Describe the impact of soil pH and drainage on forest health.', isCompleted: false, requireAttachment: true, requireNote: true },
-      { id: 'r4', description: 'Demonstrate the safe use of at least three forestry tools (e.g., pruning saw, loppers, clinometer).', isCompleted: false, requireAttachment: true, requireNote: true },
-      { id: 'r5', description: 'Complete a minimum of 8 hours of verified trail maintenance or invasive species removal.', isCompleted: false, requireAttachment: true, requireNote: true },
-      { id: 'r6', description: 'Create a 1-year restoration plan for a small section of a local park or private land.', isCompleted: false, requireAttachment: true, requireNote: true },
-      { id: 'r7', description: 'Explain the nitrogen and carbon cycles as they relate to forest floor decomposition.', isCompleted: false, requireAttachment: true, requireNote: true },
-      { id: 'r8', description: 'Lead a small group on a guided "Tree Walk" to share your findings.', isCompleted: false, requireAttachment: true, requireNote: true }
-    ],
-    reflections: '',
-    evidenceUrls: [],
-    isVerified: true,
-    isUserCreated: false,
-    icon: '🌳',
-    designChoice: 'template',
-    badgeShape: 'circle'
+    id: 'ks-eth-1', title: 'The Core Covenant', description: 'Mastery of the rules and regulations that guide our community\'s internal progression.',
+    domain: Domain.ETHICS, difficulty: Difficulty.THREE, requirements: [], reflections: '', evidenceUrls: [], isVerified: true, isUserCreated: false, creatorId: 'guildmaster', icon: '⚖️', designChoice: 'template', badgeShape: 'circle'
   },
   {
-    id: 'b2',
-    title: 'Community Architect',
-    description: 'Design and propose a community-centered space or initiative with professional rigor.',
-    domain: Domain.SOCIETY,
-    difficulty: Difficulty.THREE,
-    requirements: [
-      // Added requireAttachment and requireNote to satisfy the BadgeRequirement interface
-      { id: 'r3', description: 'Define "Third Place" theory and its importance to social cohesion.', isCompleted: false, requireAttachment: true, requireNote: true },
-      { id: 'r4', description: 'Conduct a site analysis of an underutilized space in your colony, noting sun exposure and foot traffic.', isCompleted: false, requireAttachment: true, requireNote: true },
-      { id: 'r5', description: 'Interview three diverse stakeholders about their needs for a community hub.', isCompleted: false, requireAttachment: true, requireNote: true },
-      { id: 'r6', description: 'Draft a to-scale blueprint or 3D model of your proposed intervention.', isCompleted: false, requireAttachment: true, requireNote: true },
-      { id: 'r7', description: 'Research and list the zoning laws or guild permits required for your project.', isCompleted: false, requireAttachment: true, requireNote: true },
-      { id: 'r8', description: 'Develop a budget and resource list, including possible sources of funding or donation.', isCompleted: false, requireAttachment: true, requireNote: true },
-      { id: 'r9', description: 'Present your proposal to a Colony Council or local board for feedback.', isCompleted: false, requireAttachment: true, requireNote: true },
-      { id: 'r10', description: 'Reflect on how your design promotes equity and environmental sustainability.', isCompleted: false, requireAttachment: true, requireNote: true }
-    ],
-    reflections: '',
-    evidenceUrls: [],
-    isVerified: true,
-    isUserCreated: false,
-    icon: '🏛️',
-    designChoice: 'template',
-    badgeShape: 'square'
+    id: 'ks-soc-1', title: 'Communal Genealogies', description: 'Exploring the diverse communities that made our world and the lessons taken from them.',
+    domain: Domain.SOCIETY, difficulty: Difficulty.THREE, requirements: [], reflections: '', evidenceUrls: [], isVerified: true, isUserCreated: false, creatorId: 'guildmaster', icon: '🏛️', designChoice: 'template', badgeShape: 'square'
+  },
+  // Tier: Seeker -> Wayfarer
+  {
+    id: 'ks-ide-1', title: 'Pillars of Belief', description: 'Analyzing the beliefs and institutions (political, religious, ideological) that guide shared values.',
+    domain: Domain.IDEOLOGY, difficulty: Difficulty.THREE, requirements: [], reflections: '', evidenceUrls: [], isVerified: true, isUserCreated: false, creatorId: 'guildmaster', icon: '🧠', designChoice: 'template', badgeShape: 'rectangle'
   },
   {
-    id: 'b3',
-    title: 'The Socratic Path',
-    description: 'Master the art of constructive dialogue and logical inquiry through practical application.',
-    domain: Domain.ETHICS,
-    difficulty: Difficulty.FIVE,
-    requirements: [
-      // Added requireAttachment and requireNote to satisfy the BadgeRequirement interface
-      { id: 'r5', description: 'Define the Socratic Method and differentiate it from traditional debate.', isCompleted: false, requireAttachment: true, requireNote: true },
-      { id: 'r6', description: 'Identify and explain 10 common logical fallacies (e.g., Ad Hominem, Straw Man).', isCompleted: false, requireAttachment: true, requireNote: true },
-      { id: 'r7', description: 'Read and summarize one Platonic dialogue (e.g., Meno or The Apology).', isCompleted: false, requireAttachment: true, requireNote: true },
-      { id: 'r8', description: 'Facilitate a 60-minute group inquiry session on a complex ethical topic.', isCompleted: false, requireAttachment: true, requireNote: true },
-      { id: 'r9', description: 'Demonstrate active listening techniques by summarizing an opposing viewpoint to their satisfaction.', isCompleted: false, requireAttachment: true, requireNote: true },
-      { id: 'r10', description: 'Write a 1,500-word treatise on the role of doubt in the pursuit of truth.', isCompleted: false, requireAttachment: true, requireNote: true },
-      { id: 'r11', description: 'Create a set of "Dialogue Ground Rules" for use in your local Colony meetings.', isCompleted: false, requireAttachment: true, requireNote: true },
-      { id: 'r12', description: 'Mentor a Seeker through their first public inquiry session.', isCompleted: false, requireAttachment: true, requireNote: true }
-    ],
-    reflections: '',
-    evidenceUrls: [],
-    isVerified: true,
-    isUserCreated: false,
-    icon: '⚖️',
-    designChoice: 'template',
-    badgeShape: 'rectangle'
+    id: 'ks-env-1', title: 'Planetary Custodianship', description: 'Understanding the world we inhabit and the fundamental duty we owe to it.',
+    domain: Domain.ENVIRONMENT, difficulty: Difficulty.THREE, requirements: [], reflections: '', evidenceUrls: [], isVerified: true, isUserCreated: false, creatorId: 'guildmaster', icon: '🌿', designChoice: 'template', badgeShape: 'circle'
+  },
+  // Tier: Wayfarer -> Journeyer
+  {
+    id: 'ks-eth-2', title: 'Pluralistic Protocol', description: 'How we should treat those outside of our specific ideological beliefs and institutions.',
+    domain: Domain.ETHICS, difficulty: Difficulty.FOUR, requirements: [], reflections: '', evidenceUrls: [], isVerified: true, isUserCreated: false, creatorId: 'guildmaster', icon: '🤝', designChoice: 'template', badgeShape: 'square'
+  },
+  {
+    id: 'ks-ide-2', title: 'Institutional Dynamics', description: 'Deep dive into the systems that guide community-created values.',
+    domain: Domain.IDEOLOGY, difficulty: Difficulty.FOUR, requirements: [], reflections: '', evidenceUrls: [], isVerified: true, isUserCreated: false, creatorId: 'guildmaster', icon: '👁️', designChoice: 'template', badgeShape: 'rectangle'
+  },
+  // Tier: Journeyer -> Artisan
+  {
+    id: 'ks-soc-2', title: 'Sociological Synthesis', description: 'Anthropological study of communities and the structural lessons they provide.',
+    domain: Domain.SOCIETY, difficulty: Difficulty.FOUR, requirements: [], reflections: '', evidenceUrls: [], isVerified: true, isUserCreated: false, creatorId: 'guildmaster', icon: '⚒️', designChoice: 'template', badgeShape: 'circle'
+  },
+  {
+    id: 'ks-env-2', title: 'Ecological Integration', description: 'Practical application of duty to the inhabit world through regenerative design.',
+    domain: Domain.ENVIRONMENT, difficulty: Difficulty.FOUR, requirements: [], reflections: '', evidenceUrls: [], isVerified: true, isUserCreated: false, creatorId: 'guildmaster', icon: '♻️', designChoice: 'template', badgeShape: 'square'
+  },
+  // Tier: Artisan -> Warden
+  {
+    id: 'ks-eth-3', title: 'The Warden\'s Integrity', description: 'Advanced regulations guiding community progression and external ethical relations.',
+    domain: Domain.ETHICS, difficulty: Difficulty.FIVE, requirements: [], reflections: '', evidenceUrls: [], isVerified: true, isUserCreated: false, creatorId: 'guildmaster', icon: '🛡️', designChoice: 'template', badgeShape: 'rectangle'
+  },
+  {
+    id: 'ks-env-3', title: 'Restoration Duty', description: 'Leadership in environmental reclamation and bioregional stewardship.',
+    domain: Domain.ENVIRONMENT, difficulty: Difficulty.FIVE, requirements: [], reflections: '', evidenceUrls: [], isVerified: true, isUserCreated: false, creatorId: 'guildmaster', icon: '🌲', designChoice: 'template', badgeShape: 'circle'
+  },
+  // Tier: Warden -> Keystone
+  {
+    id: 'ks-ide-3', title: 'Sovereign Systems', description: 'Final mastery of the ideological frameworks that sustain autonomous communities.',
+    domain: Domain.IDEOLOGY, difficulty: Difficulty.FIVE, requirements: [], reflections: '', evidenceUrls: [], isVerified: true, isUserCreated: false, creatorId: 'guildmaster', icon: '🖋️', designChoice: 'template', badgeShape: 'square'
+  },
+  {
+    id: 'ks-soc-3', title: 'Anthropological Legacy', description: 'Ensuring the diverse community lessons shaped into a lasting world legacy.',
+    domain: Domain.SOCIETY, difficulty: Difficulty.FIVE, requirements: [], reflections: '', evidenceUrls: [], isVerified: true, isUserCreated: false, creatorId: 'guildmaster', icon: '🏗️', designChoice: 'template', badgeShape: 'rectangle'
+  },
+
+  {
+    id: 'b1', title: 'Forest Stewardship', description: 'Learn to care for local woodland ecosystems and identify native species.',
+    domain: Domain.ENVIRONMENT, difficulty: Difficulty.TWO, requirements: [
+      { id: 'r1', description: 'Explain the concept of forest succession.', isCompleted: false, requireAttachment: true, requireNote: true },
+      { id: 'r2', description: 'Identify 10 native trees.', isCompleted: false, requireAttachment: true, requireNote: true }
+    ], reflections: '', evidenceUrls: [], isVerified: true, isUserCreated: false, creatorId: 'guildmaster', icon: '🌳', designChoice: 'template', badgeShape: 'circle'
   }
 ];
 
 export const MOCK_COLONIES: Colony[] = [
-  {
-    id: 'c1',
-    name: 'Portland Colony',
-    number: 101,
-    siege: 'Cascadia',
-    charter: 'To foster growth through sustainable urban living.',
-    membersCount: 42,
-    isApproved: true
-  },
-  {
-    id: 'c2',
-    name: 'Riverbend Colony',
-    number: 205,
-    siege: 'The Virtual Siege',
-    charter: 'Connecting nomads across digital borders.',
-    membersCount: 128,
-    isApproved: true
-  }
+  { id: 'c1', name: 'Portland Colony', number: 101, siege: 'Cascadia', charter: 'Sustainable urban living.', membersCount: 42, isApproved: true, notices: [], events: [] },
+  { id: 'c2', name: 'Riverbend Colony', number: 205, siege: 'The Virtual Siege', charter: 'Connecting nomads.', membersCount: 128, isApproved: true, notices: [], events: [] }
 ];
